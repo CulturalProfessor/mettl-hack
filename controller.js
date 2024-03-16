@@ -305,10 +305,6 @@ export const stats = async (req, res) => {
       return acc.concat(curr.QA.map((qa) => qa.Question));
     }, []);
 
-    const total_score_of_all_interviews = interviews.reduce((acc, curr) => {
-      return (acc + curr.TotalScore) / total_interviews;
-    }, 0);
-
     const available_answered_questions_pair = interviews.reduce((acc, curr) => {
       return acc.concat(
         curr.QA.filter((qa) => qa.Answer).map((qa) => {
@@ -325,7 +321,6 @@ export const stats = async (req, res) => {
     res.status(200).json({
       total_interviews,
       questions_answered,
-      total_score_of_all_interviews,
       all_answers,
       all_questions,
       available_answered_questions_pair,
