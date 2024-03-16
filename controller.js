@@ -69,6 +69,16 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ error: "Phone number must be a 10-digit string" });
     }
 
+    const existingEmailUser = await User.findOne({ Email });
+    if (existingEmailUser) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    const existingPhoneUser = await User.findOne({ Phone });
+    if (existingPhoneUser) {
+      return res.status(400).json({ error: "Phone number already exists" });
+    }
+
     const user = new User({
       Name,
       Age,
@@ -81,6 +91,10 @@ export const createUser = async (req, res) => {
     res.status(201).json({ message: "User created successfully" });
   } catch (error) {
     console.error("Error creating user:", error.message);
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ error: errors.join(", ") });
+    }
     res.status(500).json({ error: "Internal Server Error" });
   }
 }

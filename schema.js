@@ -12,10 +12,12 @@ const UserSchema = new mongoose.Schema({
   Phone: {
     type: String,
     required: true,
+    unique: true,
   },
   Email: {
     type: String,
     required: true,
+    unique: true,
   },
   ResumeImage: {
     type: String,

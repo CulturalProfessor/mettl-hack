@@ -10,6 +10,10 @@ const PORT=process.env.PORT;
 const app = Express();
 app.use(Express.json());
 
+router.get("/", (req, res) => {
+  res.status(200).json({ message: "Welcome to the MockMaster" });
+});
+
 app.use("/api", router);
 
 app.listen(PORT || 3000, () => {
