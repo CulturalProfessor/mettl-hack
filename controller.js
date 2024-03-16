@@ -45,9 +45,9 @@ export const generateQuestions = async (req, res) => {
       const questionsObject = JSON.parse(response.choices[0].message.content);
       if (!questionsObject) {
         return res
-        .status(500)
-        .json({ error: "Failed to parse response from OpenAI" });
-      }      
+          .status(500)
+          .json({ error: "Failed to parse response from OpenAI" });
+      }
       let qa = [];
       questionsObject.questions.forEach((question, index) => {
         qa.push({
@@ -57,7 +57,7 @@ export const generateQuestions = async (req, res) => {
           Score: 0,
         });
       });
-      const interview_id=Math.random().toString(36).substr(2, 9);
+      const interview_id = Math.random().toString(36).substr(2, 9);
 
       await Interview.create({
         InterviewId: interview_id,
@@ -66,7 +66,7 @@ export const generateQuestions = async (req, res) => {
         TotalScore: 0,
       });
 
-      res.status(200).json({ questions: qa, interview_id: interview_id});
+      res.status(200).json({ questions: qa, interview_id: interview_id });
     } else {
       console.error("OpenAI response data is undefined");
       res
@@ -146,3 +146,95 @@ export const getInterviews = async (req, res) => {
   }
 };
 
+export const submitAnswer = async (req, res) => {
+  try {
+    const { interview_id, email, question_index, answer, difficulty_level } =
+      req.body;
+    const interview = await Interview.findOne({ InterviewId: interview_id });
+    if (!interview) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    if (interview.Email !== email) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    let question = interview.QA[question_index];
+
+    const scorePrompt = ` Evaluate the candidate's answer "${answer}" to the following question: "${question.Question}".
+    On a scale of 1 to 10, rate the quality of the answer provided by considering factors such as:
+    - Clarity
+    - Depth of understanding
+    - Relevance to the question
+    - Problem-solving approach
+    
+    Please provide a cumulative score only that reflects the overall effectiveness of the response.
+    Remember that this is a ${difficulty_level} level interview, and you are simulating a real interviewer.
+    The score should accurately reflect the candidate's performance and contribute to a fair assessment of their abilities.
+    JSON format is preferred.
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: scorePrompt,
+        },
+        {
+          role: "user",
+          content: `Score for the answer ${answer}`,
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.5,
+    });
+
+    if (response.choices[0].message.content) {
+      const scoreObject = JSON.parse(response.choices[0].message.content);
+      const score = scoreObject.score;
+      if (isNaN(score) || score < 1 || score > 10) {
+        return res.status(400).json({ error: "Invalid score" });
+      }
+      question.Answer = answer;
+      question.Score = score;
+      await interview.save();
+      res
+        .status(200)
+        .json({ message: "Answer submitted successfully", score: score });
+    } else {
+      console.error("OpenAI response data is undefined");
+      res
+        .status(500)
+        .json({ error: "Failed to retrieve response from OpenAI" });
+    }
+  } catch (error) {
+    console.error("Error submitting answer:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const totalScore = async (req, res) => {
+  try {
+    const { interview_id, email } = req.body;
+    const interview = await Interview.findOne({ InterviewId: interview_id });
+    if (!interview) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    if (interview.Email !== email) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    let totalScore = 0;
+    interview.QA.forEach((question) => {
+      totalScore += question.Score;
+    });
+    totalScore = totalScore / 10;
+    interview.TotalScore = totalScore;
+    await interview.save();
+    res
+      .status(200)
+      .json({ message: "Total score calculated successfully", totalScore });
+  } catch (error) {
+    console.error("Error calculating total score:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
