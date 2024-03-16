@@ -32,6 +32,10 @@ const InterviewSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  Date: {
+    type: Date,
+    default: Date.now,
+  },
   Email: {
     type: String,
     required: true,

@@ -61,6 +61,8 @@ export const generateQuestions = async (req, res) => {
       await Interview.create({
         InterviewId: interview_id,
         Email: email,
+        Date: new Date().toLocaleDateString(),
+        Time: new Date().toLocaleTimeString(),
         QA: qa,
         TotalScore: 0,
       });
@@ -136,8 +138,8 @@ export const getInterviews = async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
-
-    const interviews = await Interview.find({ Email: email });
+    //sort by date
+    const interviews = await Interview.find({ Email: email }).sort({ Date: -1 });
     res.status(200).json({ interviews });
   } catch (error) {
     console.error("Error getting interviews:", error.message);
