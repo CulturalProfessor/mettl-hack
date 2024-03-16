@@ -27,8 +27,13 @@ export const generateQuestions = async (req, res) => {
           and job requirement are ${job_requirements} of ${interview_level} difficulty to prepare a 
           candidate for an interview in the field of Computer Science.Keep the questions at 0 and 9 
           index about personal background to judge candidate personality and at other indices keep 
-          technical knowledge questions.
-          Keep the format of  
+          technical knowledge questions. Try to be as specific as possible and avoid open-ended and 
+          ambiguous questions. The questions should be relevant to the job description and job
+          requirements. Think of the questions as if you are the interviewer and you are trying to
+          assess the candidate's knowledge and skills. The questions should be challenging and
+          thought-provoking to evaluate the candidate's abilities. The questions should be
+          appropriate for the given difficulty level. The questions should be clear and concise to
+          avoid any confusion.
           .JSON format is preferred.
           `,
         },
@@ -37,8 +42,8 @@ export const generateQuestions = async (req, res) => {
           content: `What are questions related to the job description and job requirements`,
         },
       ],
-      max_tokens: 1000,
-      temperature: 0.5,
+      max_tokens: 2000,
+      temperature: 0.7,
     });
 
     if (response.choices[0].message.content) {
@@ -186,7 +191,7 @@ export const submitAnswer = async (req, res) => {
         },
       ],
       max_tokens: 1000,
-      temperature: 0.5,
+      temperature: 0.7,
     });
 
     if (response.choices[0].message.content) {
