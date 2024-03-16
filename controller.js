@@ -6,37 +6,59 @@ config();
 const OPEN_AI_API_KEY = process.env.OPEN_AI_API_KEY;
 const openai = new OpenAI({ apiKey: OPEN_AI_API_KEY });
 
-
 export const generateQuestions = async (req, res) => {
   try {
-    const { questions_topic } = req.body;
+    const { job_description, job_requirements, interview_level } = req.body;
 
-    const response = await openai.chat.completions
-      .create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `
-          Generate 10 interview questions related to the topic of ${questions_topic} to prepare a candidate for an interview in the field of Computer Science. JSON format is preferred.
+    if (!job_description || !job_requirements || !interview_level) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `
+          Generate 10 interview questions related to the job description which is ${job_description} 
+          and job requirement are ${job_requirements} of ${interview_level} difficulty to prepare a 
+          candidate for an interview in the field of Computer Science.Keep the questions at 0 and 9 
+          index about personal background to judge candidate personality and at other indices keep 
+          technical knowledge questions. JSON format is preferred.
           `,
-          },
-          {
-            role: "user",
-            content: `What are questions related to the topic of  ${questions_topic}`,
-          },
-        ],
-        max_tokens: 1000,
-        temperature: 0.5,
-      })
-      .then((response) => {
-        console.log(response.choices[0].message);
-        return response;
-      });
+        },
+        {
+          role: "user",
+          content: `What are questions related to the job description and job requirements`,
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.5,
+    });
 
     if (response) {
-      console.log("Response from OpenAI:", response);
-      res.status(200).json(response);
+      console.log("Response from OpenAI:", response.choices[0].message.content);
+      let questionsString = response.choices[0].message.content;
+      console.log("Raw questions string:", questionsString);
+      questionsString = questionsString.replace(/'/g, '"');
+      console.log("Modified questions string:", questionsString);
+      let questionsArray = JSON.parse(questionsString);
+      console.log("Parsed questions array:", questionsArray);
+
+      questionsArray.questions.forEach((question, index) => {
+        if (index === 0 || index === 9) {
+          question.type = "Background";
+        } else {
+          question.type = "Technical";
+        }
+        //remove any other fields than type and question
+        questionsArray.questions[index] = {
+          type: question.type,
+          question: question.question,
+        };
+      });
+      
+      res.status(200).json({ questions: questionsArray.questions });
     } else {
       console.error("OpenAI response data is undefined");
       res
@@ -48,7 +70,6 @@ export const generateQuestions = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 export const createUser = async (req, res) => {
   try {
@@ -66,7 +87,9 @@ export const createUser = async (req, res) => {
     }
 
     if (typeof Phone !== "string" || !/^\d{10}$/.test(Phone)) {
-      return res.status(400).json({ error: "Phone number must be a 10-digit string" });
+      return res
+        .status(400)
+        .json({ error: "Phone number must be a 10-digit string" });
     }
 
     const existingEmailUser = await User.findOne({ Email });
@@ -97,4 +120,4 @@ export const createUser = async (req, res) => {
     }
     res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};

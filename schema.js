@@ -27,3 +27,28 @@ const UserSchema = new mongoose.Schema({
 
 export const User = mongoose.model("User", UserSchema);
 
+const InterviewSchema = new mongoose.Schema({
+  UserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  Username: {
+    type: String,
+    required: true,
+  },
+  Questions: {
+    type: [String],
+    required: true,
+  },
+  Answers: {
+    type: [String],
+    required: true,
+  },
+  Score: {
+    type: Number,
+    required: true,
+  },
+});
+
+export const Interview = mongoose.model("Interview", InterviewSchema);
