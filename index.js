@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import router from "./router.js";
 import mongoose from "mongoose";
 import winston from "winston";
+import cron from "node-cron";
 
 export const logger = winston.createLogger({
   transports: [
@@ -18,7 +19,7 @@ export const logger = winston.createLogger({
 
 config();
 const MONGODB_STRING = process.env.MONGODB_STRING;
-const PORT=process.env.PORT;
+const PORT = process.env.PORT;
 
 const app = Express();
 app.use(Express.json());
@@ -28,6 +29,16 @@ router.get("/", (req, res) => {
 });
 
 app.use("/api", router);
+
+cron.schedule("*/20 * * * *", () => {
+  fetch("https://mettl-hack.onrender.com/api")
+    .then(() => {
+      logger.info("Server kept awake successfully");
+    })
+    .catch(error => {
+      logger.error("Error keeping server awake:", error.message);
+    });
+});
 
 app.listen(PORT || 3000, () => {
   logger.info(`Server is running on port ${PORT}`);
