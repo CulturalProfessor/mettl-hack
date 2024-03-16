@@ -317,6 +317,11 @@ export const stats = async (req, res) => {
       );
     }, []);
 
+    const user = await User.findOne({ Email: email });
+
+    const badge = user.Badge;
+    const badge_score = user.Badge_Score;
+
     res.status(200).json({
       total_interviews,
       questions_answered,
@@ -324,6 +329,8 @@ export const stats = async (req, res) => {
       all_answers,
       all_questions,
       available_answered_questions_pair,
+      badge,
+      badge_score,
     });
   } catch (error) {
     console.error("Error calculating stats:", error.message);
