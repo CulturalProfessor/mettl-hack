@@ -17,9 +17,18 @@ const UserSchema = new mongoose.Schema({
   Email: {
     type: String,
     required: true,
+    unique: true,
   },
   ResumeImage: {
     type: String,
+    required: true,
+  },
+  Badge: {
+    type: String,
+    required: true,
+  },
+  Badge_Score: {
+    type: Number,
     required: true,
   },
 });

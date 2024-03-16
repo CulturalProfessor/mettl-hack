@@ -117,6 +117,8 @@ export const createUser = async (req, res) => {
       Phone,
       Email,
       ResumeImage,
+      Badge: "Newbie",
+      Badge_Score: 0,
     });
 
     await user.save();
@@ -139,7 +141,9 @@ export const getInterviews = async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
     //sort by date
-    const interviews = await Interview.find({ Email: email }).sort({ Date: -1 });
+    const interviews = await Interview.find({ Email: email }).sort({
+      Date: -1,
+    });
     res.status(200).json({ interviews });
   } catch (error) {
     console.error("Error getting interviews:", error.message);
@@ -198,7 +202,48 @@ export const submitAnswer = async (req, res) => {
       }
       question.Answer = answer;
       question.Score = score;
+
+      let sumOfScores = 0;
+      interview.QA.forEach((qa) => {
+        sumOfScores += qa.Score;
+      });
+
+      let totalScore = sumOfScores / 10;
+      interview.TotalScore = totalScore;
+
       await interview.save();
+
+      const allInterviews = await Interview.find({ Email: email });
+
+      let totalScoreOfAllInterviews = 0;
+
+      allInterviews.forEach((interview) => {
+        totalScoreOfAllInterviews += interview.TotalScore;
+      });
+
+      const averageScore = totalScoreOfAllInterviews / allInterviews.length;
+      let badge = "";
+      const user = await User.findOne({ Email: email });
+
+      // Score 0-3: Newbie
+      // Score 4-6: Intermediate
+      // Score 7-9: Advanced
+      // Score 10: Expert
+
+      if (averageScore >= 0 && averageScore <= 3) {
+        badge = "Newbie";
+      } else if (averageScore >= 4 && averageScore <= 6) {
+        badge = "Intermediate";
+      } else if (averageScore >= 7 && averageScore <= 9) {
+        badge = "Advanced";
+      } else {
+        badge = "Expert";
+      }
+
+      user.Badge = badge;
+      user.Badge_Score = averageScore;
+      await user.save();
+
       res
         .status(200)
         .json({ message: "Answer submitted successfully", score: score });
@@ -224,18 +269,93 @@ export const totalScore = async (req, res) => {
     if (interview.Email !== email) {
       return res.status(403).json({ error: "Unauthorized" });
     }
-    let totalScore = 0;
-    interview.QA.forEach((question) => {
-      totalScore += question.Score;
-    });
-    totalScore = totalScore / 10;
-    interview.TotalScore = totalScore;
-    await interview.save();
+
+    const totalScore = interview.TotalScore;
+
     res
       .status(200)
       .json({ message: "Total score calculated successfully", totalScore });
   } catch (error) {
     console.error("Error calculating total score:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const stats = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+    const interviews = await Interview.find({ Email: email });
+
+    const total_interviews = interviews.length;
+
+    const questions_answered = interviews.reduce((acc, curr) => {
+      return acc + curr.QA.filter((qa) => qa.Answer).length;
+    }, 0);
+
+    const all_answers = interviews.reduce((acc, curr) => {
+      return acc.concat(
+        curr.QA.filter((qa) => qa.Answer).map((qa) => qa.Answer)
+      );
+    }, []);
+
+    const all_questions = interviews.reduce((acc, curr) => {
+      return acc.concat(curr.QA.map((qa) => qa.Question));
+    }, []);
+
+    const total_score_of_all_interviews = interviews.reduce((acc, curr) => {
+      return (acc + curr.TotalScore) / total_interviews;
+    }, 0);
+
+    const available_answered_questions_pair = interviews.reduce((acc, curr) => {
+      return acc.concat(
+        curr.QA.filter((qa) => qa.Answer).map((qa) => {
+          return { Question: qa.Question, Answer: qa.Answer };
+        })
+      );
+    }, []);
+
+    res.status(200).json({
+      total_interviews,
+      questions_answered,
+      total_score_of_all_interviews,
+      all_answers,
+      all_questions,
+      available_answered_questions_pair,
+    });
+  } catch (error) {
+    console.error("Error calculating stats:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error getting users:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const badge = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+    const user = await User.findOne({ Email: email });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ badge: user.Badge, badge_score: user.Badge_Score});
+  } catch (error) {
+    console.error("Error getting badge:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
