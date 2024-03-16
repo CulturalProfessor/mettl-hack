@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { OpenAI } from "openai";
-import { User } from "./schema.js";
+import { Interview, User } from "./schema.js";
 
 config();
 const OPEN_AI_API_KEY = process.env.OPEN_AI_API_KEY;
@@ -8,9 +8,10 @@ const openai = new OpenAI({ apiKey: OPEN_AI_API_KEY });
 
 export const generateQuestions = async (req, res) => {
   try {
-    const { job_description, job_requirements, interview_level } = req.body;
+    const { job_description, job_requirements, interview_level, email } =
+      req.body;
 
-    if (!job_description || !job_requirements || !interview_level) {
+    if (!job_description || !job_requirements || !interview_level || !email) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -36,29 +37,30 @@ export const generateQuestions = async (req, res) => {
       temperature: 0.5,
     });
 
-    if (response) {
+    if (
+      response &&
+      response.choices &&
+      response.choices[0] &&
+      response.choices[0].message &&
+      response.choices[0].message.content
+    ) {
       console.log("Response from OpenAI:", response.choices[0].message.content);
-      let questionsString = response.choices[0].message.content;
-      console.log("Raw questions string:", questionsString);
-      questionsString = questionsString.replace(/'/g, '"');
-      console.log("Modified questions string:", questionsString);
-      let questionsArray = JSON.parse(questionsString);
-      console.log("Parsed questions array:", questionsArray);
+      const questionsObject = JSON.parse(response.choices[0].message.content);
+      const questionsArray = Object.values(questionsObject);
 
-      questionsArray.questions.forEach((question, index) => {
-        if (index === 0 || index === 9) {
-          question.type = "Background";
-        } else {
-          question.type = "Technical";
-        }
-        //remove any other fields than type and question
-        questionsArray.questions[index] = {
-          type: question.type,
-          question: question.question,
-        };
+      let qa = [];
+      questionsArray.forEach((question, index) => {
+        const type = index === 0 || index === 9 ? "Background" : "Technical";
+        qa.push({ Question: question, Answer: "", Score: 0, Type: type });
       });
-      
-      res.status(200).json({ questions: questionsArray.questions });
+
+      await Interview.create({
+        Email: email,
+        QA: qa,
+        TotalScore: 0,
+      });
+
+      res.status(200).json({ questions: qa });
     } else {
       console.error("OpenAI response data is undefined");
       res
@@ -118,6 +120,22 @@ export const createUser = async (req, res) => {
       const errors = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({ error: errors.join(", ") });
     }
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getInterviews = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const interviews = await Interview.find({ Email: email });
+    res.status(200).json({ interviews });
+  } catch (error) {
+    console.error("Error getting interviews:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

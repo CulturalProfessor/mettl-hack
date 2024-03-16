@@ -28,24 +28,30 @@ const UserSchema = new mongoose.Schema({
 export const User = mongoose.model("User", UserSchema);
 
 const InterviewSchema = new mongoose.Schema({
-  UserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  Username: {
+  Email: {
     type: String,
     required: true,
   },
-  Questions: {
-    type: [String],
-    required: true,
-  },
-  Answers: {
-    type: [String],
-    required: true,
-  },
-  Score: {
+  QA: [
+    {
+      Question: {
+        type: String,
+        required: true,
+      },
+      Answer: {
+        type: String,
+      },
+      Type: {
+        type: String,
+        required: true,
+      },
+      Score: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
+  TotalScore: {
     type: Number,
     required: true,
   },
