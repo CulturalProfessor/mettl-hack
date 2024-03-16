@@ -57,15 +57,16 @@ export const generateQuestions = async (req, res) => {
           Score: 0,
         });
       });
+      const interview_id=Math.random().toString(36).substr(2, 9);
 
       await Interview.create({
-        InterviewId: Math.random().toString(36).substr(2, 9),
+        InterviewId: interview_id,
         Email: email,
         QA: qa,
         TotalScore: 0,
       });
 
-      res.status(200).json({ questions: qa });
+      res.status(200).json({ questions: qa, interview_id: interview_id});
     } else {
       console.error("OpenAI response data is undefined");
       res
@@ -144,3 +145,4 @@ export const getInterviews = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+

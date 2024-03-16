@@ -30,7 +30,7 @@ router.get("/", (req, res) => {
 app.use("/api", router);
 
 app.listen(PORT || 3000, () => {
-  logger.info("Server is running on port 3000");
+  logger.info(`Server is running on port ${PORT}`);
   mongoose.connect(MONGODB_STRING);
 
   const db = mongoose.connection;
