@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 import { OpenAI } from "openai";
 import { Interview, User } from "./schema.js";
+import fs from "fs";
+import { logger } from "./index.js";
 
 config();
 const OPEN_AI_API_KEY = process.env.OPEN_AI_API_KEY;
@@ -25,7 +27,9 @@ export const generateQuestions = async (req, res) => {
           and job requirement are ${job_requirements} of ${interview_level} difficulty to prepare a 
           candidate for an interview in the field of Computer Science.Keep the questions at 0 and 9 
           index about personal background to judge candidate personality and at other indices keep 
-          technical knowledge questions. JSON format is preferred.
+          technical knowledge questions.
+          Keep the format of  
+          .JSON format is preferred.
           `,
         },
         {
@@ -37,24 +41,25 @@ export const generateQuestions = async (req, res) => {
       temperature: 0.5,
     });
 
-    if (
-      response &&
-      response.choices &&
-      response.choices[0] &&
-      response.choices[0].message &&
-      response.choices[0].message.content
-    ) {
-      console.log("Response from OpenAI:", response.choices[0].message.content);
+    if (response.choices[0].message.content) {
       const questionsObject = JSON.parse(response.choices[0].message.content);
-      const questionsArray = Object.values(questionsObject);
-
+      if (!questionsObject) {
+        return res
+        .status(500)
+        .json({ error: "Failed to parse response from OpenAI" });
+      }      
       let qa = [];
-      questionsArray.forEach((question, index) => {
-        const type = index === 0 || index === 9 ? "Background" : "Technical";
-        qa.push({ Question: question, Answer: "", Score: 0, Type: type });
+      questionsObject.questions.forEach((question, index) => {
+        qa.push({
+          Question: question.question,
+          Answer: "",
+          Type: index === 0 || index === 9 ? "Background" : "Technical",
+          Score: 0,
+        });
       });
 
       await Interview.create({
+        InterviewId: Math.random().toString(36).substr(2, 9),
         Email: email,
         QA: qa,
         TotalScore: 0,

@@ -17,7 +17,6 @@ const UserSchema = new mongoose.Schema({
   Email: {
     type: String,
     required: true,
-    unique: true,
   },
   ResumeImage: {
     type: String,
@@ -28,6 +27,11 @@ const UserSchema = new mongoose.Schema({
 export const User = mongoose.model("User", UserSchema);
 
 const InterviewSchema = new mongoose.Schema({
+  InterviewId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   Email: {
     type: String,
     required: true,
