@@ -421,7 +421,13 @@ export const badge = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ badge: user.Badge, badge_score: user.Badge_Score });
+    res
+      .status(200)
+      .json({
+        badge: user.Badge,
+        badge_score: user.Badge_Score,
+        badge_url: user.Badge_Url,
+      });
   } catch (error) {
     console.error("Error getting badge:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
