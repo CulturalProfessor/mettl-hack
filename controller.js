@@ -453,7 +453,8 @@ export const stats = async (req, res) => {
 
     const badge = user.Badge;
     const badge_score = user.Badge_Score;
-    const badge_url = user.Badge_Url;
+    const badge_url = user.Badges_Url;
+    const total_badges = user.Badges_Url.length;
 
     res.status(200).json({
       total_interviews,
@@ -464,6 +465,7 @@ export const stats = async (req, res) => {
       badge,
       badge_score,
       badge_url,
+      total_badges,
     });
   } catch (error) {
     console.error("Error calculating stats:", error.message);
