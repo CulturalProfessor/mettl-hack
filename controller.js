@@ -37,34 +37,34 @@ export const generateQuestions = async (req, res) => {
           Response : 
           "questions": [
             {
-              "question": "Tell me about a challenging software development project you worked on using Python. What was your role and the outcome?",
+              "question": "Tell me about a challenging software development project you worked on using Python. What was your role and the outcome?"
             },
             {
-              "question": "Explain the difference between Agile and Scrum methodologies. When would you use one over the other?",
+              "question": "Explain the difference between Agile and Scrum methodologies. When would you use one over the other?"
             },
             {
-              "question": "How do you approach solving complex problems during software development? Can you provide an example?",
+              "question": "How do you approach solving complex problems during software development? Can you provide an example?"
             },
             {
-              "question": "Describe a situation where you had to work independently on a project. How did you ensure its success?",
+              "question": "Describe a situation where you had to work independently on a project. How did you ensure its success?"
             },
             {
-              "question": "In your opinion, what is the importance of communication in a team environment during software development?",
+              "question": "In your opinion, what is the importance of communication in a team environment during software development?"
             },
             {
-              "question": "What programming language do you feel most comfortable with and why? Can you give an example of a project you completed using that language?",
+              "question": "What programming language do you feel most comfortable with and why? Can you give an example of a project you completed using that language?"
             },
             {
-              "question": "How do you ensure that your code meets quality standards and is maintainable in the long run?",
+              "question": "How do you ensure that your code meets quality standards and is maintainable in the long run?"
             },
             {
-              "question": "Have you ever faced a situation where there was a disagreement within your team regarding a technical decision? How did you handle it?",
+              "question": "Have you ever faced a situation where there was a disagreement within your team regarding a technical decision? How did you handle it?"
             },
             {
-              "question": "Can you walk me through your experience working on a software project that required a high level of collaboration with team members? What was your role?",
+              "question": "Can you walk me through your experience working on a software project that required a high level of collaboration with team members? What was your role?"
             },
             {
-              "question": "Tell me about a time when you had to quickly learn a new programming language or technology. How did you approach the learning process?",
+              "question": "Tell me about a time when you had to quickly learn a new programming language or technology. How did you approach the learning process?"
             }
           ]
 
@@ -119,7 +119,7 @@ export const generateQuestions = async (req, res) => {
         res.status(200).json({ questions: qa, interview_id: interview_id });
       } catch (error) {
         console.error("Error parsing questions:", error.message);
-        return res.status(500).json({ error: "Internal Server Error"});
+        return res.status(500).json({ error: "Internal Server Error" });
       }
     } else {
       console.error("OpenAI response data is undefined");
