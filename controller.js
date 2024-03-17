@@ -262,7 +262,6 @@ export const suggestedAnswer = async (req, res) => {
     });
 
     if (response.choices[0].message.content) {
-      console.log(response.choices[0].message.content);
       const suggestedAnswer = JSON.parse(response.choices[0].message.content);
       res.status(200).json({ suggested_answer:suggestedAnswer.suggested_answer });
     }else{
