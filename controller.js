@@ -172,8 +172,9 @@ export const createUser = async (req, res) => {
       ResumeImage,
       Badge: "Newbie",
       Badge_Score: 0,
-      Badge_Url:
+      Badges_Url: [
         "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/1.png?d=140x140",
+      ],
     });
 
     await user.save();
@@ -285,27 +286,28 @@ export const submitAnswer = async (req, res) => {
       // Score 7-9: Advanced
       // Score 10: Expert
 
+      let badge_url = "";
       if (averageScore >= 0 && averageScore <= 3) {
         badge = "Newbie";
-        badge_url =
-          " https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/1.png?d=140x140";
-      } else if (averageScore >= 4 && averageScore <= 6) {
+      } else if (averageScore >3 && averageScore <= 6) {
         badge = "Intermediate";
         badge_url =
           "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/2.png?d=140x140";
-      } else if (averageScore >= 7 && averageScore <= 9) {
+        user.Badges_Url.push(badge_url);
+      } else if (averageScore > 6 && averageScore <= 9) {
         badge = "Advanced";
         badge_url =
           "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/3.png?d=140x140";
+        user.Badges_Url.push(badge_url);
       } else {
         badge = "Expert";
         badge_url =
           "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/4.png?d=140x140";
+        user.Badges_Url.push(badge_url);
       }
 
       user.Badge = badge;
       user.Badge_Score = averageScore;
-      user.Badge_Url = badge_url;
       await user.save();
 
       res
@@ -421,13 +423,12 @@ export const badge = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res
-      .status(200)
-      .json({
-        badge: user.Badge,
-        badge_score: user.Badge_Score,
-        badge_url: user.Badge_Url,
-      });
+    res.status(200).json({
+      badge: user.Badge,
+      badge_score: user.Badge_Score,
+      badges_url: user.Badges_Url,
+      latest_badge_url: user.Badges_Url[user.Badges_Url.length - 1],
+    });
   } catch (error) {
     console.error("Error getting badge:", error.message);
     res.status(500).json({ error: "Internal Server Error" });

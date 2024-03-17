@@ -31,10 +31,12 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  Badge_Url: {
-    type: String,
-    required: true,
-  },
+  Badges_Url: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
 });
 
 export const User = mongoose.model("User", UserSchema);
