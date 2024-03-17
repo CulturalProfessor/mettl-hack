@@ -28,6 +28,46 @@ export const generateQuestions = async (req, res) => {
           candidate for an interview in the field of Computer Science.Keep the questions at 0 and 9 
           index about personal background to judge candidate personality and at other indices keep 
           technical knowledge questions.
+
+          Example : 
+          Job Description : Software Development Engineer
+          Job Requirements : Proficiency in at least one programming language (e.g., Python, JavaScript, Java)
+          Interview Level : Hard
+           
+          Response : 
+          "questions": [
+            {
+              "question": "Tell me about a challenging software development project you worked on using Python. What was your role and the outcome?",
+            },
+            {
+              "question": "Explain the difference between Agile and Scrum methodologies. When would you use one over the other?",
+            },
+            {
+              "question": "How do you approach solving complex problems during software development? Can you provide an example?",
+            },
+            {
+              "question": "Describe a situation where you had to work independently on a project. How did you ensure its success?",
+            },
+            {
+              "question": "In your opinion, what is the importance of communication in a team environment during software development?",
+            },
+            {
+              "question": "What programming language do you feel most comfortable with and why? Can you give an example of a project you completed using that language?",
+            },
+            {
+              "question": "How do you ensure that your code meets quality standards and is maintainable in the long run?",
+            },
+            {
+              "question": "Have you ever faced a situation where there was a disagreement within your team regarding a technical decision? How did you handle it?",
+            },
+            {
+              "question": "Can you walk me through your experience working on a software project that required a high level of collaboration with team members? What was your role?",
+            },
+            {
+              "question": "Tell me about a time when you had to quickly learn a new programming language or technology. How did you approach the learning process?",
+            }
+          ]
+
           .JSON format is preferred.
           `,
         },
@@ -41,33 +81,46 @@ export const generateQuestions = async (req, res) => {
     });
 
     if (response.choices[0].message.content) {
-      const questionsObject = JSON.parse(response.choices[0].message.content);
-      if (!questionsObject) {
-        return res
-          .status(500)
-          .json({ error: "Failed to parse response from OpenAI" });
-      }
-      let qa = [];
-      questionsObject.questions.forEach((question, index) => {
-        qa.push({
-          Question: question.question,
-          Answer: "",
-          Type: index === 0 || index === 9 ? "Background" : "Technical",
-          Score: 0,
+      try {
+        const questionsObject = JSON.parse(response.choices[0].message.content);
+        if (!questionsObject.questions) {
+          logger.error(
+            "Failed to parse response from OpenAI: No 'questions' property found"
+          );
+          return res
+            .status(500)
+            .json({ error: "Failed to parse response from OpenAI" });
+        }
+
+        let qa = [];
+        questionsObject.questions.forEach((question, index) => {
+          qa.push({
+            Question: question.question,
+            Answer: "",
+            Type: index === 0 || index === 9 ? "Background" : "Technical",
+            Score: 0,
+          });
         });
-      });
-      const interview_id = Math.random().toString(36).substr(2, 9);
 
-      await Interview.create({
-        InterviewId: interview_id,
-        Email: email,
-        Date: new Date().toLocaleDateString(),
-        Time: new Date().toLocaleTimeString(),
-        QA: qa,
-        TotalScore: 0,
-      });
+        const interview_id = Math.random().toString(36).substr(2, 9);
 
-      res.status(200).json({ questions: qa, interview_id: interview_id });
+        await Interview.create({
+          InterviewId: interview_id,
+          Email: email,
+          Job_Description: job_description,
+          Job_Requirments: job_requirements,
+          Date: new Date().toLocaleDateString(),
+          Time: new Date().toLocaleTimeString(),
+          QA: qa,
+          TotalScore: 0,
+        });
+
+        logger.info("Questions generated successfully");
+        res.status(200).json({ questions: qa, interview_id: interview_id });
+      } catch (error) {
+        console.error("Error parsing questions:", error.message);
+        return res.status(500).json({ error: "Internal Server Error"});
+      }
     } else {
       console.error("OpenAI response data is undefined");
       res
@@ -355,7 +408,7 @@ export const badge = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ badge: user.Badge, badge_score: user.Badge_Score});
+    res.status(200).json({ badge: user.Badge, badge_score: user.Badge_Score });
   } catch (error) {
     console.error("Error getting badge:", error.message);
     res.status(500).json({ error: "Internal Server Error" });

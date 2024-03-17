@@ -49,6 +49,14 @@ const InterviewSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  Job_Description: {
+    type: String,
+    required: true,
+  },
+  Job_Requirments: {
+    type: String,
+    required: true,
+  },
   QA: [
     {
       Question: {
