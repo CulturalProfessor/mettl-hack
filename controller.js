@@ -172,7 +172,8 @@ export const createUser = async (req, res) => {
       ResumeImage,
       Badge: "Newbie",
       Badge_Score: 0,
-      Badge_Url: "https://leetcode.com/static/images/badges/dcc-2023-1.png",
+      Badge_Url:
+        "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/1.png?d=140x140",
     });
 
     await user.save();
@@ -286,16 +287,20 @@ export const submitAnswer = async (req, res) => {
 
       if (averageScore >= 0 && averageScore <= 3) {
         badge = "Newbie";
-        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-1.png";
+        badge_url =
+          " https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/1.png?d=140x140";
       } else if (averageScore >= 4 && averageScore <= 6) {
         badge = "Intermediate";
-        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-4.png";
+        badge_url =
+          "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/2.png?d=140x140";
       } else if (averageScore >= 7 && averageScore <= 9) {
         badge = "Advanced";
-        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-8.png";
+        badge_url =
+          "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/3.png?d=140x140";
       } else {
         badge = "Expert";
-        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-12.png";
+        badge_url =
+          "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/4.png?d=140x140";
       }
 
       user.Badge = badge;
