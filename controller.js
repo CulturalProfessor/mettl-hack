@@ -172,6 +172,7 @@ export const createUser = async (req, res) => {
       ResumeImage,
       Badge: "Newbie",
       Badge_Score: 0,
+      Badge_Url: "https://leetcode.com/static/images/badges/dcc-2023-1.png",
     });
 
     await user.save();
@@ -285,16 +286,21 @@ export const submitAnswer = async (req, res) => {
 
       if (averageScore >= 0 && averageScore <= 3) {
         badge = "Newbie";
+        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-1.png";
       } else if (averageScore >= 4 && averageScore <= 6) {
         badge = "Intermediate";
+        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-4.png";
       } else if (averageScore >= 7 && averageScore <= 9) {
         badge = "Advanced";
+        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-8.png";
       } else {
         badge = "Expert";
+        badge_url = "https://leetcode.com/static/images/badges/dcc-2023-12.png";
       }
 
       user.Badge = badge;
       user.Badge_Score = averageScore;
+      user.Badge_Url = badge_url;
       await user.save();
 
       res
