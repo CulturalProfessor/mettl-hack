@@ -207,6 +207,77 @@ export const getInterviews = async (req, res) => {
   }
 };
 
+export const suggestedAnswer = async (req, res) => {
+  try {
+    const { interview_id, email, question_index } = req.body;
+    const interview = await Interview.findOne({ InterviewId: interview_id });
+
+    if (!interview) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    if (interview.Email !== email) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    let question = interview.QA[question_index];
+
+    const suggestedAnswerPrompt = `Suggest an answer to the following question: "${question}". 
+    Suggest a detailed and relevant answer that would be appropriate for a ${interview.Job_Description} 
+    interview having following requiremnets ${interview.Job_Requirments}. Consider yourself an expert 
+    in the field and provide a detailed answer that would be helpful to the candidate.
+    Avoid open-ended answers and provide a clear and concise response.
+
+    Example Question: 
+    "Tell me about a challenging software development project you worked on using Python.
+    What was your role and the outcome?"
+
+    Response:
+    {
+      "suggested_answer" : "I worked on a challenging software development project using Python where I was responsible for 
+      design and implement the backend architecture using Django and PostgreSQL. The outcome was a highly 
+      scalable and performant application that processed data 10x faster than the previous system."
+      developing a web application that could process large amounts of data in real-time. My role was to
+      design and implement the backend architecture using Django and PostgreSQL. The outcome was a highly
+      scalable and performant application that processed data 10x faster than the previous system."
+    }
+
+    AVOID ANY TRAILING COMMAS
+    Answer should be in JSON format.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: suggestedAnswerPrompt,
+        },
+        {
+          role: "user",
+          content: "Suggest an answer",
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+
+    if (response.choices[0].message.content) {
+      console.log(response.choices[0].message.content);
+      const suggestedAnswer = JSON.parse(response.choices[0].message.content);
+      res.status(200).json({ suggested_answer:suggestedAnswer.suggested_answer });
+    }else{
+      console.error("OpenAI response data is undefined");
+      res
+        .status(500)
+        .json({ error: "Failed to retrieve response from OpenAI" });
+    }
+  } catch (error) {
+    console.error("Error getting suggested answer:", error.message);
+    logger.error("Error getting suggested answer");
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const submitAnswer = async (req, res) => {
   try {
     const { interview_id, email, question_index, answer, difficulty_level } =
@@ -289,7 +360,7 @@ export const submitAnswer = async (req, res) => {
       let badge_url = "";
       if (averageScore >= 0 && averageScore <= 3) {
         badge = "Newbie";
-      } else if (averageScore >3 && averageScore <= 6) {
+      } else if (averageScore > 3 && averageScore <= 6) {
         badge = "Intermediate";
         badge_url =
           "https://d8it4huxumps7.cloudfront.net/uploads/images/gamify_badges/login_streak/2.png?d=140x140";
@@ -428,6 +499,7 @@ export const badge = async (req, res) => {
       badge_score: user.Badge_Score,
       badges_url: user.Badges_Url,
       latest_badge_url: user.Badges_Url[user.Badges_Url.length - 1],
+      total_badges: user.Badges_Url.length,
     });
   } catch (error) {
     console.error("Error getting badge:", error.message);

@@ -8,6 +8,7 @@ import {
   stats,
   getUsers,
   badge,
+  suggestedAnswer,
 } from "./controller.js";
 
 const router = Router();
@@ -19,5 +20,6 @@ router.post("/total", totalScore);
 router.post("/stats", stats);
 router.get("/users", getUsers);
 router.post("/badge", badge);
+router.post("/suggest", suggestedAnswer);
 
 export default router;
